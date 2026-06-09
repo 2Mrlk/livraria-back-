@@ -1,12 +1,12 @@
 {
-  "name": "b7store-api",
+  "name": "sesi-leitura-api",
   "version": "1.0.0",
-  "description": "API REST para B7Store com Supabase",
+  "description": "API REST para o Aplicativo de Leitura Escolar SESI com Supabase",
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
