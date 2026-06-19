@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { login, logout, me, register } from '../controllers/authController.js'
-import { requireAdmin } from '../middleware/authMiddleware.js'
+import { requireCampanhaAdmin as requireAdmin } from '../middleware/adminAuthMiddleware.js'
 
 // Novos controladores da gestão de leitura da escola
 import { 
