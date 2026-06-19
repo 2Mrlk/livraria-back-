@@ -1,88 +1,90 @@
-import jwt from 'jsonwebtoken'
-import { supabase } from '../config/supabase.js'
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Aluno</title>
 
-const JWT_SECRET = process.env.JWT_SECRET || 'sesi-campanha-secret-key-mudar'
-const JWT_EXPIRES = '7d'
+<style>
+body{
+    font-family: Arial, sans-serif;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    background:#f5f5f5;
+}
 
-export async function login(req, res) {
-    try {
-        const { email, senha } = req.body
-        if (!email || !senha) {
-            return res.status(400).json({ error: 'Email e senha são obrigatórios.' })
+.card{
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    box-shadow:0 0 10px rgba(0,0,0,.1);
+    width:300px;
+}
+
+input,button{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+}
+
+button{
+    cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Login do Aluno</h2>
+
+    <input
+        id="rm"
+        placeholder="Digite seu RM"
+    >
+
+    <button onclick="login()">
+        Entrar
+    </button>
+
+    <p id="msg"></p>
+</div>
+
+<script>
+async function login(){
+
+    const rm = document.getElementById('rm').value;
+
+    const resposta = await fetch(
+        'https://SEU-BACKEND.vercel.app/api/students/auth/login',
+        {
+            method:'POST',
+            headers:{
+                'Content-Type':'application/json'
+            },
+            body:JSON.stringify({ rm })
         }
+    );
 
-        const { data: admin, error } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('email', email)
-            .single()
+    const dados = await resposta.json();
 
-        if (error || !admin) {
-            return res.status(401).json({ error: 'Credenciais inválidas.' })
-        }
+    if(resposta.ok){
 
-        // Comparação simples de senha (use bcrypt em produção real)
-        if (admin.senha !== senha) {
-            return res.status(401).json({ error: 'Credenciais inválidas.' })
-        }
+        localStorage.setItem(
+            'token',
+            dados.token
+        );
 
-        const token = jwt.sign(
-            { sub: admin.id, email: admin.email, role: 'admin' },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRES }
-        )
-
-        return res.json({
-            token,
-            admin: { id: admin.id, email: admin.email, nome: admin.nome }
-        })
-    } catch (err) {
-        return res.status(500).json({ error: err.message })
+        document.getElementById('msg').innerText =
+            `Bem-vindo ${dados.aluno.nome}`;
+    }
+    else{
+        document.getElementById('msg').innerText =
+            dados.error;
     }
 }
+</script>
 
-export async function register(req, res) {
-    try {
-        const { email, senha, nome } = req.body
-        if (!email || !senha || !nome) {
-            return res.status(400).json({ error: 'Nome, email e senha são obrigatórios.' })
-        }
-
-        const { data, error } = await supabase
-            .from('admin_users')
-            .insert([{ email, senha, nome }])
-            .select()
-            .single()
-
-        if (error) {
-            return res.status(400).json({ error: error.message })
-        }
-
-        return res.status(201).json({ message: 'Admin criado com sucesso.', admin: { id: data.id, email: data.email, nome: data.nome } })
-    } catch (err) {
-        return res.status(500).json({ error: err.message })
-    }
-}
-
-export async function logout(req, res) {
-    // JWT é stateless — logout é feito no cliente descartando o token
-    return res.json({ message: 'Logout realizado com sucesso.' })
-}
-
-export async function me(req, res) {
-    try {
-        const { data: admin, error } = await supabase
-            .from('admin_users')
-            .select('id, email, nome')
-            .eq('id', req.adminId)
-            .single()
-
-        if (error || !admin) {
-            return res.status(404).json({ error: 'Admin não encontrado.' })
-        }
-
-        return res.json(admin)
-    } catch (err) {
-        return res.status(500).json({ error: err.message })
-    }
-}
+</body>
+</html>
